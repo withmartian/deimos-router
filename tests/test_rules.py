@@ -58,23 +58,23 @@ class TestTaskRule:
     
     def test_task_rule_initialization(self):
         """Test TaskRule initialization."""
-        rules = {
+        triggers = {
             "code": "anthropic/claude-sonnet-4",
             "medical": "openai/gpt-5"
         }
-        task_rule = TaskRule("task-decider", rules)
+        task_rule = TaskRule("task-decider", triggers)
         
         assert task_rule.name == "task-decider"
-        assert task_rule.rules == rules
-        assert str(task_rule) == "TaskRule(name='task-decider', rules=['code', 'medical'])"
+        assert task_rule.triggers == triggers
+        assert str(task_rule) == "TaskRule(name='task-decider', triggers=['code', 'medical'])"
     
     def test_task_rule_evaluate_with_matching_task(self):
         """Test TaskRule evaluation with matching task."""
-        rules = {
+        triggers = {
             "code": "anthropic/claude-sonnet-4",
             "medical": "openai/gpt-5"
         }
-        task_rule = TaskRule("task-decider", rules)
+        task_rule = TaskRule("task-decider", triggers)
         
         request_data = {
             "messages": [{"role": "user", "content": "Help me code"}],
@@ -87,8 +87,8 @@ class TestTaskRule:
     
     def test_task_rule_evaluate_with_no_task(self):
         """Test TaskRule evaluation when no task is provided."""
-        rules = {"code": "anthropic/claude-sonnet-4"}
-        task_rule = TaskRule("task-decider", rules)
+        triggers = {"code": "anthropic/claude-sonnet-4"}
+        task_rule = TaskRule("task-decider", triggers)
         
         request_data = {
             "messages": [{"role": "user", "content": "Help me"}]
@@ -100,8 +100,8 @@ class TestTaskRule:
     
     def test_task_rule_evaluate_with_unknown_task(self):
         """Test TaskRule evaluation with unknown task."""
-        rules = {"code": "anthropic/claude-sonnet-4"}
-        task_rule = TaskRule("task-decider", rules)
+        triggers = {"code": "anthropic/claude-sonnet-4"}
+        task_rule = TaskRule("task-decider", triggers)
         
         request_data = {
             "messages": [{"role": "user", "content": "Help me"}],
@@ -140,12 +140,12 @@ class TestTaskRule:
         
         # Add a new rule
         task_rule.add_task_rule("new-task", "gpt-4")
-        assert "new-task" in task_rule.rules
-        assert task_rule.rules["new-task"] == "gpt-4"
+        assert "new-task" in task_rule.triggers
+        assert task_rule.triggers["new-task"] == "gpt-4"
         
         # Remove a rule
         task_rule.remove_task_rule("initial")
-        assert "initial" not in task_rule.rules
+        assert "initial" not in task_rule.triggers
         
         # Remove non-existent rule (should not raise error)
         task_rule.remove_task_rule("non-existent")
@@ -586,7 +586,7 @@ class TestRouterWithRules:
         }
         
         # For this test, we need to modify the advice rule to look for advice_type
-        advice_rule.rules["personal"] = "gpt-3.5-turbo"  # Direct model for testing
+        advice_rule.triggers["personal"] = "gpt-3.5-turbo"  # Direct model for testing
         
         # The chain should resolve: task-decider -> advice-decider -> model
         # But since advice-decider doesn't know about advice_type, it will return None
@@ -664,6 +664,21 @@ class TestIntegrationWithChat:
                 mock_response = Mock()
                 mock_response.model = 'gpt-4'
                 mock_response._deimos_metadata = {}
+                # Ensure cost attribute is None to avoid float conversion issues
+                mock_response.cost = None
+                # Mock usage for cost calculation
+                mock_usage = Mock()
+                mock_usage.prompt_tokens = 10
+                mock_usage.completion_tokens = 5
+                mock_usage.total_tokens = 15
+                mock_response.usage = mock_usage
+                # Make choices iterable for logging system
+                mock_choice = Mock()
+                mock_choice.message = Mock()
+                mock_choice.message.content = "Test response"
+                mock_choice.message.role = "assistant"
+                mock_choice.finish_reason = "stop"
+                mock_response.choices = [mock_choice]
                 mock_client.chat.completions.create.return_value = mock_response
                 
                 # Make a request with task parameter
@@ -680,7 +695,6 @@ class TestIntegrationWithChat:
                 mock_client.chat.completions.create.assert_called_once_with(
                     messages=messages,
                     model="gpt-4",  # Should have selected gpt-4 based on task
-                    task="code",
                     temperature=0.7
                 )
                 

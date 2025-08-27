@@ -44,7 +44,7 @@ Basic usage:
        rules=[
            TaskRule(
                name="task-router",
-               rules={
+               triggers={
                    'coding': 'openai/gpt-4o',
                    'creative': 'openai/gpt-4o',
                    'simple': 'openai/gpt-4o-mini'

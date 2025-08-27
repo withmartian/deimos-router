@@ -223,7 +223,7 @@ def demonstrate_rule_chaining():
     # 1. If task is "debug", use claude-3-5-sonnet regardless of content
     # 2. Otherwise, use CodeRule to decide between models
     
-    debug_rule = TaskRule(name="debug_task", rules={"debug": "claude-3-5-sonnet"})
+    debug_rule = TaskRule(name="debug_task", triggers={"debug": "claude-3-5-sonnet"})
     code_rule = CodeRule(name="code_detector", code="claude-3-5-sonnet", not_code="gpt-4")
     
     router = Router(

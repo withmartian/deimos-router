@@ -9,8 +9,8 @@ from deimos_router.rules import AutoTaskRule
 def create_auto_task_router():
     """Create a router that automatically detects tasks from message content."""
     
-    # Define task mappings for common LLM use cases
-    task_mappings = {
+    # Define triggers for common LLM use cases
+    triggers = {
         'writing': 'gpt-4o',           # Creative writing, blog posts, articles
         'coding': 'claude-3-sonnet',   # Programming, debugging, code review
         'analysis': 'gpt-4o-mini',     # Data analysis, research, insights
@@ -23,7 +23,7 @@ def create_auto_task_router():
     # Create the auto task rule
     auto_task_rule = AutoTaskRule(
         name='auto_task_router',
-        task_mappings=task_mappings,
+        triggers=triggers,
         default='gpt-4o-mini',  # Default for undetected/unmapped tasks
         llm_model='gpt-4o-mini'  # Use smallest model for task detection
     )
@@ -148,7 +148,7 @@ def demonstrate_rule_configuration():
     print("\n1️⃣ Basic Configuration (Common Tasks):")
     basic_rule = AutoTaskRule(
         name='basic_auto_task_router',
-        task_mappings={
+        triggers={
             'writing': 'gpt-4o',
             'coding': 'claude-3-sonnet',
             'analysis': 'gpt-4o-mini'
@@ -161,7 +161,7 @@ def demonstrate_rule_configuration():
     print("\n2️⃣ Extended Configuration (More Tasks):")
     extended_rule = AutoTaskRule(
         name='extended_auto_task_router',
-        task_mappings={
+        triggers={
             'writing': 'gpt-4o',
             'coding': 'claude-3-sonnet',
             'analysis': 'gpt-4o-mini',
@@ -182,7 +182,7 @@ def demonstrate_rule_configuration():
     print("\n3️⃣ Domain-Specific Configuration:")
     domain_rule = AutoTaskRule(
         name='business_auto_task_router',
-        task_mappings={
+        triggers={
             'writing': 'gpt-4o',        # Business writing, proposals
             'analysis': 'claude-3-sonnet', # Business analysis, reports
             'summarization': 'gpt-4o-mini', # Meeting summaries, reports
@@ -196,7 +196,7 @@ def demonstrate_rule_configuration():
     print("\n4️⃣ Dynamic Task Management:")
     dynamic_rule = AutoTaskRule(
         name='dynamic_auto_task_router',
-        task_mappings={'writing': 'gpt-4o'},
+        triggers={'writing': 'gpt-4o'},
         default='gpt-4o-mini'
     )
     

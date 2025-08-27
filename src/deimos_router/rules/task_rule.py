@@ -7,15 +7,15 @@ from .base import Rule, Decision
 class TaskRule(Rule):
     """Rule that makes decisions based on task metadata in the request."""
     
-    def __init__(self, name: str, rules: Dict[str, Union[str, Rule]]):
+    def __init__(self, name: str, triggers: Dict[str, Union[str, Rule]]):
         """Initialize a TaskRule.
         
         Args:
             name: The name of this rule
-            rules: Dictionary mapping task names to models or other rules
+            triggers: Dictionary mapping task names to models or other rules
         """
         super().__init__(name)
-        self.rules = rules
+        self.triggers = triggers
     
     def evaluate(self, request_data: Dict[str, Any]) -> Decision:
         """Evaluate based on the 'task' field in request data.
@@ -32,9 +32,9 @@ class TaskRule(Rule):
         if task is None:
             return Decision(None, trigger=None)
         
-        # Look up the task in our rules
-        if task in self.rules:
-            decision_value = self.rules[task]
+        # Look up the task in our triggers
+        if task in self.triggers:
+            decision_value = self.triggers[task]
             return Decision(decision_value, trigger=task)
         
         # No matching rule for this task
@@ -47,7 +47,7 @@ class TaskRule(Rule):
             task: The task name
             decision: The model name or Rule to use for this task
         """
-        self.rules[task] = decision
+        self.triggers[task] = decision
     
     def remove_task_rule(self, task: str) -> None:
         """Remove a task rule.
@@ -55,8 +55,8 @@ class TaskRule(Rule):
         Args:
             task: The task name to remove
         """
-        if task in self.rules:
-            del self.rules[task]
+        if task in self.triggers:
+            del self.triggers[task]
     
     def __repr__(self) -> str:
-        return f"TaskRule(name='{self.name}', rules={list(self.rules.keys())})"
+        return f"TaskRule(name='{self.name}', triggers={list(self.triggers.keys())})"

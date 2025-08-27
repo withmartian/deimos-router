@@ -9,19 +9,19 @@ from .base import Rule, Decision
 class AutoTaskRule(Rule):
     """Rule that automatically detects tasks from message content using an LLM."""
     
-    def __init__(self, name: str, task_mappings: Dict[str, Union[str, Rule]], 
+    def __init__(self, name: str, triggers: Dict[str, Union[str, Rule]], 
                  default: Optional[Union[str, Rule]] = None,
                  llm_model: Optional[str] = None):
         """Initialize an AutoTaskRule.
         
         Args:
             name: The name of this rule
-            task_mappings: Dictionary mapping task names to models or rules
+            triggers: Dictionary mapping task names to models or rules
             default: Default model/rule when no task is detected or mapped
             llm_model: Model to use for task detection. If None, uses the default model from config.
         """
         super().__init__(name)
-        self.task_mappings = task_mappings
+        self.triggers = triggers
         self.default = default
         self.llm_model = llm_model or config.get_default_model('task_classification')
     
@@ -43,8 +43,8 @@ class AutoTaskRule(Rule):
         # Use LLM to detect the task
         detected_task = self._detect_task_llm(text_content)
         
-        if detected_task and detected_task in self.task_mappings:
-            return Decision(self.task_mappings[detected_task])
+        if detected_task and detected_task in self.triggers:
+            return Decision(self.triggers[detected_task])
         
         # Fall back to default
         return Decision(self.default)
@@ -85,7 +85,7 @@ class AutoTaskRule(Rule):
             )
             
             # Create prompt for task detection
-            available_tasks = list(self.task_mappings.keys())
+            available_tasks = list(self.triggers.keys())
             tasks_list = ', '.join(available_tasks)
             
             prompt = f"""Analyze the following user message and determine what type of task they are requesting.
@@ -135,7 +135,7 @@ User message:
             task: The task name
             decision: The model name or Rule to use for this task
         """
-        self.task_mappings[task] = decision
+        self.triggers[task] = decision
     
     def remove_task_mapping(self, task: str) -> None:
         """Remove a task mapping.
@@ -143,8 +143,8 @@ User message:
         Args:
             task: The task name to remove
         """
-        if task in self.task_mappings:
-            del self.task_mappings[task]
+        if task in self.triggers:
+            del self.triggers[task]
     
     def __repr__(self) -> str:
-        return f"AutoTaskRule(name='{self.name}', tasks={list(self.task_mappings.keys())})"
+        return f"AutoTaskRule(name='{self.name}', tasks={list(self.triggers.keys())})"

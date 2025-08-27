@@ -55,7 +55,7 @@ Here's a simple example to get you started:
        rules=[
            TaskRule(
                name="task-based-routing",
-               rules={
+               triggers={
                    'coding': 'openai/gpt-4o',
                    'creative': 'openai/gpt-4o',
                    'simple': 'openai/gpt-4o-mini'

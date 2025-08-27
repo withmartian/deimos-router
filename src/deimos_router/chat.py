@@ -2,10 +2,12 @@
 
 from typing import Any, Dict, List, Optional, Union
 import openai
+import time
 from openai.types.chat import ChatCompletion
 
 from .config import config
 from .router import get_router
+from .logging.logger import get_logger
 
 
 class ChatCompletions:
@@ -44,6 +46,7 @@ class ChatCompletions:
             ChatCompletion response with potential routing metadata and explanation
         """
         client = self._get_client()
+        logger = get_logger()
         
         # Check if this is a router call
         if model.startswith("deimos/"):
@@ -66,16 +69,31 @@ class ChatCompletions:
                 selected_model = router.select_model(request_data)
                 explanation_entries = []
             
+            # Convert explanation entries to dict format for logging
+            routing_explanation = [entry.to_dict() for entry in explanation_entries]
+            
             # Filter out custom parameters that shouldn't be passed to OpenAI
             openai_kwargs = {k: v for k, v in kwargs.items() 
                            if k not in ['task', 'explain']}  # Add other custom params as needed
             
-            # Make the API call with selected model
-            response = client.chat.completions.create(
-                messages=messages,
-                model=selected_model,
-                **openai_kwargs
-            )
+            # Log the request with routing information
+            with logger.log_request(
+                router_name=router_name,
+                selected_model=selected_model,
+                routing_explanation=routing_explanation,
+                request_data=request_data
+            ) as log_entry:
+                start_time = time.time()
+                
+                # Make the API call with selected model
+                response = client.chat.completions.create(
+                    messages=messages,
+                    model=selected_model,
+                    **openai_kwargs
+                )
+                
+                # Complete the log entry with response data
+                logger.complete_request_success(log_entry, response, start_time)
             
             # Add routing metadata to the response
             # We'll modify the response object to include routing info
@@ -97,19 +115,37 @@ class ChatCompletions:
                 
                 # Add explanation if requested
                 if explain and explanation_entries:
-                    response._deimos_metadata['explain'] = [
-                        entry.to_dict() for entry in explanation_entries
-                    ]
+                    response._deimos_metadata['explain'] = routing_explanation
             
             return response
         
         else:
-            # Direct model call - pass through to OpenAI
-            return client.chat.completions.create(
-                messages=messages,
-                model=model,
+            # Direct model call - pass through to OpenAI with logging
+            request_data = {
+                'messages': messages,
+                'model': model,
                 **kwargs
-            )
+            }
+            
+            # Log the direct model request
+            with logger.log_request(
+                router_name=None,
+                selected_model=model,
+                routing_explanation=[],
+                request_data=request_data
+            ) as log_entry:
+                start_time = time.time()
+                
+                response = client.chat.completions.create(
+                    messages=messages,
+                    model=model,
+                    **kwargs
+                )
+                
+                # Complete the log entry with response data
+                logger.complete_request_success(log_entry, response, start_time)
+            
+            return response
 
 
 class Chat:

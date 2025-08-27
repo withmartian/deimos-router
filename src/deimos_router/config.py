@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 from typing import Dict, Optional
 
+from .default_models import get_all_default_models
+
 
 class Config:
     """Configuration manager for API credentials and settings."""
@@ -13,6 +15,14 @@ class Config:
         self.api_url: Optional[str] = None
         self.api_key: Optional[str] = None
         self.default_models: Dict[str, str] = {}
+        
+        # Logging configuration
+        self.logging_enabled: bool = True
+        self.log_directory: str = "./logs"
+        self.log_level: str = "full"  # "full" or "metadata_only"
+        self.log_rotation: str = "daily"  # "daily" or "size"
+        self.custom_pricing: Optional[Dict[str, Dict[str, float]]] = None
+        
         self._load_config()
     
     def _load_config(self) -> None:
@@ -45,13 +55,7 @@ class Config:
     
     def _set_default_models(self) -> None:
         """Set the built-in default models for various tasks."""
-        self.default_models = {
-            'code_language_detection': 'gpt-4o-mini',
-            'natural_language_detection': 'gpt-4o-mini',
-            'general_chat': 'gpt-4o-mini',
-            'code_analysis': 'gpt-4o-mini',
-            'task_classification': 'gpt-4o-mini',
-        }
+        self.default_models = get_all_default_models()
     
     def _load_default_models_from_env(self) -> None:
         """Load default model overrides from environment variables."""
@@ -77,6 +81,9 @@ class Config:
                 if not self.api_key and 'api_key' in data:
                     self.api_key = data['api_key']
                 
+                # Load logging configuration
+                self._load_logging_config_from_data(data)
+                
                 # Load default models from file (overrides built-in defaults but not env vars)
                 if 'default_models' in data and isinstance(data['default_models'], dict):
                     for key, value in data['default_models'].items():
@@ -89,6 +96,34 @@ class Config:
         except (json.JSONDecodeError, IOError, KeyError):
             # Silently ignore file loading errors
             pass
+    
+    def _load_logging_config_from_data(self, data: Dict) -> None:
+        """Load logging configuration from config data."""
+        # Load logging settings from environment variables first (highest precedence)
+        self.logging_enabled = os.getenv('DEIMOS_LOGGING_ENABLED', str(self.logging_enabled)).lower() == 'true'
+        self.log_directory = os.getenv('DEIMOS_LOG_DIRECTORY', self.log_directory)
+        self.log_level = os.getenv('DEIMOS_LOG_LEVEL', self.log_level)
+        self.log_rotation = os.getenv('DEIMOS_LOG_ROTATION', self.log_rotation)
+        
+        # Then load from config file (lower precedence)
+        if 'logging' in data and isinstance(data['logging'], dict):
+            logging_config = data['logging']
+            
+            if 'enabled' in logging_config and not os.getenv('DEIMOS_LOGGING_ENABLED'):
+                self.logging_enabled = bool(logging_config['enabled'])
+            
+            if 'directory' in logging_config and not os.getenv('DEIMOS_LOG_DIRECTORY'):
+                self.log_directory = str(logging_config['directory'])
+            
+            if 'level' in logging_config and not os.getenv('DEIMOS_LOG_LEVEL'):
+                self.log_level = str(logging_config['level'])
+            
+            if 'rotation' in logging_config and not os.getenv('DEIMOS_LOG_ROTATION'):
+                self.log_rotation = str(logging_config['rotation'])
+            
+            # Load custom pricing if provided
+            if 'custom_pricing' in logging_config and isinstance(logging_config['custom_pricing'], dict):
+                self.custom_pricing = logging_config['custom_pricing']
     
     def is_configured(self) -> bool:
         """Check if both API URL and API key are configured."""

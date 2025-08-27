@@ -5,18 +5,14 @@ from typing import Any, Dict, List, Optional, Union
 
 from .rules import Rule, Decision, get_rule
 from .rules.base import ExplanationEntry
+from .default_models import get_default_router_models
 
 
 class Router:
     """Router for selecting models based on routing logic."""
     
     # Default cheap models for fallback
-    DEFAULT_CHEAP_MODELS = [
-        "gpt-3.5-turbo",
-        "gpt-3.5-turbo-0125",
-        "gpt-4o-mini",
-        "gpt-4o-mini-2024-07-18",
-    ]
+    DEFAULT_CHEAP_MODELS = get_default_router_models()
     
     def __init__(
         self, 

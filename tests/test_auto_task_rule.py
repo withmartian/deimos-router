@@ -18,12 +18,12 @@ class TestAutoTaskRule:
         
         rule = AutoTaskRule(
             name='auto_task_router',
-            task_mappings=task_mappings,
+            triggers=task_mappings,
             default='gpt-4o-mini'
         )
         
         assert rule.name == 'auto_task_router'
-        assert rule.task_mappings == task_mappings
+        assert rule.triggers == task_mappings
         assert rule.default == 'gpt-4o-mini'
         assert rule.llm_model == 'gpt-4o-mini'  # Default from config
     
@@ -33,7 +33,7 @@ class TestAutoTaskRule:
         
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings=task_mappings,
+            triggers=task_mappings,
             llm_model='gpt-4o'
         )
         
@@ -43,7 +43,7 @@ class TestAutoTaskRule:
         """Test text content extraction from messages."""
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o'}
+            triggers={'writing': 'gpt-4o'}
         )
         
         request_data = {
@@ -62,7 +62,7 @@ class TestAutoTaskRule:
         """Test text extraction with empty messages."""
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o'}
+            triggers={'writing': 'gpt-4o'}
         )
         
         request_data = {'messages': []}
@@ -73,7 +73,7 @@ class TestAutoTaskRule:
         """Test text extraction with no messages key."""
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o'}
+            triggers={'writing': 'gpt-4o'}
         )
         
         request_data = {}
@@ -105,7 +105,7 @@ class TestAutoTaskRule:
         
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'}
+            triggers={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'}
         )
         
         result = rule._detect_task_llm('Write a blog post about machine learning')
@@ -125,7 +125,7 @@ class TestAutoTaskRule:
         
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o'}
+            triggers={'writing': 'gpt-4o'}
         )
         
         result = rule._detect_task_llm('Write a blog post')
@@ -155,7 +155,7 @@ class TestAutoTaskRule:
         
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'}
+            triggers={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'}
         )
         
         result = rule._detect_task_llm('Some unclear request')
@@ -185,7 +185,7 @@ class TestAutoTaskRule:
         
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'}
+            triggers={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'}
         )
         
         result = rule._detect_task_llm('Translate this text to French')
@@ -215,7 +215,7 @@ class TestAutoTaskRule:
         
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'}
+            triggers={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'}
         )
         
         result = rule._detect_task_llm('Write a story')
@@ -239,7 +239,7 @@ class TestAutoTaskRule:
         
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'}
+            triggers={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'}
         )
         
         result = rule._detect_task_llm('Write a blog post')
@@ -252,7 +252,7 @@ class TestAutoTaskRule:
         
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'},
+            triggers={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'},
             default='gpt-4o-mini'
         )
         
@@ -273,7 +273,7 @@ class TestAutoTaskRule:
         
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'},
+            triggers={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'},
             default='gpt-4o-mini'
         )
         
@@ -294,7 +294,7 @@ class TestAutoTaskRule:
         
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'},
+            triggers={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'},
             default='gpt-4o-mini'
         )
         
@@ -312,7 +312,7 @@ class TestAutoTaskRule:
         """Test evaluation with empty text content."""
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'},
+            triggers={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'},
             default='gpt-4o-mini'
         )
         
@@ -326,40 +326,40 @@ class TestAutoTaskRule:
         """Test adding a new task mapping."""
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o'}
+            triggers={'writing': 'gpt-4o'}
         )
         
         rule.add_task_mapping('coding', 'claude-3-sonnet')
-        assert 'coding' in rule.task_mappings
-        assert rule.task_mappings['coding'] == 'claude-3-sonnet'
+        assert 'coding' in rule.triggers
+        assert rule.triggers['coding'] == 'claude-3-sonnet'
     
     def test_remove_task_mapping(self):
         """Test removing a task mapping."""
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'}
+            triggers={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet'}
         )
         
         rule.remove_task_mapping('coding')
-        assert 'coding' not in rule.task_mappings
-        assert 'writing' in rule.task_mappings
+        assert 'coding' not in rule.triggers
+        assert 'writing' in rule.triggers
     
     def test_remove_nonexistent_task_mapping(self):
         """Test removing a task mapping that doesn't exist."""
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o'}
+            triggers={'writing': 'gpt-4o'}
         )
         
         # Should not raise an error
         rule.remove_task_mapping('nonexistent')
-        assert 'writing' in rule.task_mappings
+        assert 'writing' in rule.triggers
     
     def test_repr(self):
         """Test string representation."""
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet', 'analysis': 'gpt-4o-mini'}
+            triggers={'writing': 'gpt-4o', 'coding': 'claude-3-sonnet', 'analysis': 'gpt-4o-mini'}
         )
         
         repr_str = repr(rule)
@@ -372,7 +372,7 @@ class TestAutoTaskRule:
         """Test scenarios with common LLM tasks."""
         rule = AutoTaskRule(
             name='test_rule',
-            task_mappings={
+            triggers={
                 'writing': 'gpt-4o',
                 'coding': 'claude-3-sonnet',
                 'analysis': 'gpt-4o-mini',
@@ -382,9 +382,9 @@ class TestAutoTaskRule:
         )
         
         # Test that the rule is properly configured for common tasks
-        assert len(rule.task_mappings) == 5
-        assert 'writing' in rule.task_mappings
-        assert 'coding' in rule.task_mappings
-        assert 'analysis' in rule.task_mappings
-        assert 'summarization' in rule.task_mappings
-        assert 'translation' in rule.task_mappings
+        assert len(rule.triggers) == 5
+        assert 'writing' in rule.triggers
+        assert 'coding' in rule.triggers
+        assert 'analysis' in rule.triggers
+        assert 'summarization' in rule.triggers
+        assert 'translation' in rule.triggers

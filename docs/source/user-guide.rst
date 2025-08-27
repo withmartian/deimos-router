@@ -312,6 +312,249 @@ Best Practices
 5. **Keep Rules Simple**: Complex logic should be split across multiple rules
 6. **Document Your Routing**: Comment your rule configurations for maintainability
 
+Logging
+-------
+
+Deimos Router includes a comprehensive logging system that automatically captures all requests and responses, including routing decisions, performance metrics, and cost estimates.
+
+Automatic Logging
+~~~~~~~~~~~~~~~~~
+
+By default, logging is **enabled** and will automatically log:
+
+- All chat completion requests (both router and direct model calls)
+- Routing decisions and explanations
+- Request and response content
+- Performance metrics (latency)
+- Token usage and cost estimates
+- Error information when requests fail
+
+Logs are stored in JSON Lines format in the ``./logs/`` directory with daily rotation (e.g., ``deimos-logs-2025-01-27.jsonl``).
+
+Log Entry Format
+~~~~~~~~~~~~~~~~
+
+Each log entry contains comprehensive information:
+
+.. code-block:: json
+
+   {
+     "timestamp": "2025-01-27T10:30:00Z",
+     "request_id": "uuid",
+     "router_name": "my_router",
+     "selected_model": "claude-3-5-sonnet",
+     "routing_explanation": [
+       {
+         "rule_type": "CodeRule",
+         "rule_name": "code_detector",
+         "rule_trigger": "python_code_detected",
+         "decision": "claude-3-5-sonnet"
+       }
+     ],
+     "request": {
+       "messages": [{"role": "user", "content": "def hello(): print('world')"}],
+       "task": "coding"
+     },
+     "response": {
+       "model": "claude-3-5-sonnet",
+       "choices": [
+         {
+           "message": {
+             "role": "assistant",
+             "content": "This function prints 'world' when called."
+           },
+           "finish_reason": "stop"
+         }
+       ],
+       "usage": {
+         "prompt_tokens": 15,
+         "completion_tokens": 12,
+         "total_tokens": 27
+       }
+     },
+     "latency_ms": 1250,
+     "tokens": {"prompt": 15, "completion": 12, "total": 27},
+     "cost": 0.000405,
+     "cost_estimated": true,
+     "cost_source": "token_calculation",
+     "status": "success"
+   }
+
+Configuring Logging
+~~~~~~~~~~~~~~~~~~~
+
+Environment Variables
+^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   export DEIMOS_LOGGING_ENABLED=true          # Enable/disable logging
+   export DEIMOS_LOG_DIRECTORY="./logs"        # Log directory
+   export DEIMOS_LOG_LEVEL="full"              # Log level (currently only "full")
+
+Configuration File
+^^^^^^^^^^^^^^^^^^
+
+Add a ``logging`` section to your ``secrets.json`` or ``config.json``:
+
+.. code-block:: json
+
+   {
+     "api_url": "https://your-api-endpoint.com/api/v1",
+     "api_key": "your-api-key-here",
+     "logging": {
+       "enabled": true,
+       "directory": "./logs",
+       "level": "full",
+       "custom_pricing": {
+         "gpt-4": {"input": 0.03, "output": 0.06},
+         "claude-3-5-sonnet": {"input": 0.003, "output": 0.015}
+       }
+     }
+   }
+
+Programmatic Configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+   from deimos_router.logging.logger import configure_logging
+
+   # Configure logging programmatically
+   configure_logging(
+       enabled=True,
+       log_directory="./custom_logs",
+       custom_pricing={
+           "my-custom-model": {"input": 0.01, "output": 0.02}
+       }
+   )
+
+Disabling Logging
+~~~~~~~~~~~~~~~~~
+
+To disable logging completely:
+
+**Option 1: Environment Variable**
+
+.. code-block:: bash
+
+   export DEIMOS_LOGGING_ENABLED=false
+
+**Option 2: Configuration File**
+
+.. code-block:: json
+
+   {
+     "logging": {
+       "enabled": false
+     }
+   }
+
+**Option 3: Programmatically**
+
+.. code-block:: python
+
+   from deimos_router.logging.logger import configure_logging
+
+   configure_logging(enabled=False)
+
+Cost Tracking
+~~~~~~~~~~~~~
+
+The logging system automatically tracks costs by:
+
+1. **Extracting actual costs** from API responses when available
+2. **Estimating costs** based on token usage and model pricing when actual costs aren't provided
+3. **Using configurable pricing** for custom models or updated pricing
+
+Each log entry includes:
+
+- ``cost``: The calculated cost (actual or estimated)
+- ``cost_estimated``: Boolean indicating if the cost was estimated
+- ``cost_source``: Source of cost data ("api_response" or "token_calculation")
+
+Reading Log Files
+~~~~~~~~~~~~~~~~~
+
+Log files are stored in JSON Lines format for easy processing:
+
+.. code-block:: python
+
+   import json
+   from pathlib import Path
+
+   # Read today's log file
+   log_file = Path("./logs/deimos-logs-2025-01-27.jsonl")
+   if log_file.exists():
+       with open(log_file, 'r') as f:
+           for line in f:
+               entry = json.loads(line)
+               print(f"Request {entry['request_id']}: {entry['selected_model']} - ${entry['cost']:.6f}")
+
+Or use the built-in logger methods:
+
+.. code-block:: python
+
+   from deimos_router.logging.logger import get_logger
+   from deimos_router.logging.json_logger import JSONFileLogger
+
+   logger = get_logger()
+   if isinstance(logger.backend, JSONFileLogger):
+       # Read all entries
+       entries = logger.backend.read_log_entries()
+       
+       # Get log files
+       log_files = logger.backend.get_log_files()
+
+Log Analysis
+~~~~~~~~~~~~
+
+The JSON format makes it easy to analyze your usage:
+
+.. code-block:: python
+
+   import json
+   from collections import defaultdict
+   from pathlib import Path
+
+   def analyze_logs(log_directory="./logs"):
+       """Analyze log files for usage statistics."""
+       stats = {
+           'total_requests': 0,
+           'total_cost': 0,
+           'model_usage': defaultdict(int),
+           'router_usage': defaultdict(int),
+           'avg_latency': 0
+       }
+       
+       latencies = []
+       
+       for log_file in Path(log_directory).glob("deimos-logs-*.jsonl"):
+           with open(log_file, 'r') as f:
+               for line in f:
+                   entry = json.loads(line)
+                   
+                   stats['total_requests'] += 1
+                   if entry.get('cost'):
+                       stats['total_cost'] += entry['cost']
+                   
+                   stats['model_usage'][entry['selected_model']] += 1
+                   stats['router_usage'][entry.get('router_name', 'direct')] += 1
+                   
+                   if entry.get('latency_ms'):
+                       latencies.append(entry['latency_ms'])
+       
+       if latencies:
+           stats['avg_latency'] = sum(latencies) / len(latencies)
+       
+       return stats
+
+   # Usage
+   stats = analyze_logs()
+   print(f"Total requests: {stats['total_requests']}")
+   print(f"Total cost: ${stats['total_cost']:.6f}")
+   print(f"Average latency: {stats['avg_latency']:.2f}ms")
+
 Performance Considerations
 --------------------------
 
@@ -319,3 +562,5 @@ Performance Considerations
 - Simple rules (TaskRule, MessageLengthRule, CodeRule) are very fast
 - Rule chains are evaluated sequentially, so shorter chains are faster
 - Consider caching strategies for expensive rule evaluations
+- Logging adds minimal overhead and is designed to not impact performance
+- Log files are written asynchronously and won't block API requests

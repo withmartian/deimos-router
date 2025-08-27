@@ -142,7 +142,7 @@ Automatically detects task type from conversation content using an LLM and route
 **Constructor Parameters:**
 
 * ``name`` (str): Name identifier for this rule
-* ``task_mappings`` (Dict[str, Union[str, Rule]]): Dictionary mapping task names to models or rules
+* ``triggers`` (Dict[str, Union[str, Rule]]): Dictionary mapping task names to models or rules
 * ``default`` (Union[str, Rule], optional): Default model/rule when no task is detected or mapped
 * ``llm_model`` (str, optional): Model used for task detection (uses config default if None)
 
@@ -152,7 +152,7 @@ Automatically detects task type from conversation content using an LLM and route
 
     rule = AutoTaskRule(
         name="auto_task_detector",
-        task_mappings={
+        triggers={
             "coding": "openai/gpt-4o",
             "creative_writing": "anthropic/claude-3-sonnet",
             "data_analysis": "openai/gpt-4o-mini"
@@ -491,7 +491,7 @@ Usage Patterns
     # Create rules
     task_rule = TaskRule(
         name="task_router",
-        rules={
+        triggers={
             "code": "openai/gpt-4o",
             "creative": "anthropic/claude-3-sonnet"
         }
