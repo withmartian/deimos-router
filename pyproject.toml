@@ -7,7 +7,9 @@ authors = [
     { name = "Adam Michael Wood", email = "adam@withmartian.com" }
 ]
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "openai>=1.0.0",
+]
 
 [build-system]
 requires = ["hatchling"]
