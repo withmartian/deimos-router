@@ -7,6 +7,8 @@ from .code_rule import CodeRule
 from .code_language_rule import CodeLanguageRule
 from .natural_language_rule import NaturalLanguageRule
 from .auto_task_rule import AutoTaskRule
+from .message_length_rule import MessageLengthRule
+from .conversation_context_rule import ConversationContextRule
 
 # Global registry for rules (similar to router registry)
 _rule_registry = {}
@@ -56,6 +58,8 @@ __all__ = [
     'CodeLanguageRule',
     'NaturalLanguageRule',
     'AutoTaskRule',
+    'MessageLengthRule',
+    'ConversationContextRule',
     'register_rule',
     'get_rule',
     'list_rules',

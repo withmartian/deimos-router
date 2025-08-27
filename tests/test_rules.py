@@ -23,7 +23,7 @@ class TestDecision:
         assert not decision.is_none()
         assert decision.get_model() == "gpt-3.5-turbo"
         assert decision.get_rule() is None
-        assert str(decision) == "Decision(model='gpt-3.5-turbo')"
+        assert str(decision) == "Decision(model='gpt-3.5-turbo', trigger='None')"
     
     def test_rule_decision(self):
         """Test decision with another rule."""
@@ -35,7 +35,7 @@ class TestDecision:
         assert not decision.is_none()
         assert decision.get_model() is None
         assert decision.get_rule() is rule
-        assert str(decision) == "Decision(rule=test-rule)"
+        assert str(decision) == "Decision(rule=test-rule, trigger='None')"
     
     def test_none_decision(self):
         """Test decision with None."""
@@ -46,7 +46,7 @@ class TestDecision:
         assert decision.is_none()
         assert decision.get_model() is None
         assert decision.get_rule() is None
-        assert str(decision) == "Decision(None)"
+        assert str(decision) == "Decision(None, trigger='None')"
 
 
 class TestTaskRule:

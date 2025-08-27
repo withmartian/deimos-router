@@ -66,11 +66,15 @@ class ChatCompletions:
                 selected_model = router.select_model(request_data)
                 explanation_entries = []
             
+            # Filter out custom parameters that shouldn't be passed to OpenAI
+            openai_kwargs = {k: v for k, v in kwargs.items() 
+                           if k not in ['task', 'explain']}  # Add other custom params as needed
+            
             # Make the API call with selected model
             response = client.chat.completions.create(
                 messages=messages,
                 model=selected_model,
-                **kwargs
+                **openai_kwargs
             )
             
             # Add routing metadata to the response
