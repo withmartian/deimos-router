@@ -1,20 +1,29 @@
-"""Example usage of MessageLengthRule for routing based on message length."""
+"""Example usage of MessageLengthRule for routing based on message token length."""
 
+import tiktoken
 from src.deimos_router.rules import MessageLengthRule
 from src.deimos_router.router import Router
 
 
+def count_tokens(text: str, encoding_name: str = "cl100k_base") -> int:
+    """Helper function to count tokens."""
+    if not text:
+        return 0
+    encoding = tiktoken.get_encoding(encoding_name)
+    return len(encoding.encode(text))
+
+
 def main():
-    """Demonstrate MessageLengthRule usage."""
+    """Demonstrate MessageLengthRule usage with token-based routing."""
     
-    # Create a message length rule
-    # Short messages (< 200 chars) -> fast model
-    # Medium messages (200-1500 chars) -> balanced model  
-    # Long messages (>= 1500 chars) -> powerful model
+    # Create a message length rule based on token counts
+    # Short messages (< 50 tokens) -> fast model
+    # Medium messages (50-300 tokens) -> balanced model  
+    # Long messages (>= 300 tokens) -> powerful model
     length_rule = MessageLengthRule(
-        name="length_router",
-        short_threshold=200,
-        long_threshold=1500,
+        name="token_length_router",
+        short_threshold=50,
+        long_threshold=300,
         short_model="gpt-3.5-turbo",
         medium_model="gpt-4",
         long_model="gpt-4-turbo"
@@ -62,25 +71,27 @@ Please include code examples where relevant and explain the trade-offs of differ
         }
     ]
     
-    print("MessageLengthRule Example")
+    print("MessageLengthRule Example (Token-based)")
     print("=" * 50)
     print(f"Rule configuration:")
-    print(f"  Short threshold: {length_rule.short_threshold} chars -> {length_rule.short_model}")
-    print(f"  Long threshold: {length_rule.long_threshold} chars -> {length_rule.long_model}")
+    print(f"  Short threshold: {length_rule.short_threshold} tokens -> {length_rule.short_model}")
+    print(f"  Long threshold: {length_rule.long_threshold} tokens -> {length_rule.long_model}")
     print(f"  Medium messages: {length_rule.medium_model}")
+    print(f"  Encoding: {length_rule.encoding_name}")
     print()
     
     for test_case in test_cases:
         print(f"Test: {test_case['name']}")
         
-        # Calculate message length
+        # Calculate message token count
         user_content = ""
         for msg in test_case['messages']:
             if msg.get('role') == 'user':
                 user_content += msg.get('content', '')
         
-        message_length = len(user_content)
-        print(f"  Message length: {message_length} characters")
+        character_count = len(user_content)
+        token_count = count_tokens(user_content)
+        print(f"  Message length: {character_count} characters, {token_count} tokens")
         
         # Get routing decision
         selected_model, explanation = router.select_model_with_explanation(test_case)

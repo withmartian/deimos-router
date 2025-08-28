@@ -1,27 +1,30 @@
 """Message length-based rule implementation."""
 
 from typing import Any, Dict, Optional, Union
+import tiktoken
 from .base import Rule, Decision
 
 
 class MessageLengthRule(Rule):
-    """Rule that makes decisions based on the total length of user messages."""
+    """Rule that makes decisions based on the total token length of user messages."""
     
     def __init__(self, name: str, 
                  short_threshold: int,
                  long_threshold: int,
                  short_model: Union[str, Rule],
                  medium_model: Union[str, Rule],
-                 long_model: Union[str, Rule]):
+                 long_model: Union[str, Rule],
+                 encoding_name: str = "cl100k_base"):
         """Initialize a MessageLengthRule.
         
         Args:
             name: The name of this rule
-            short_threshold: Character count threshold for short messages
-            long_threshold: Character count threshold for long messages
+            short_threshold: Token count threshold for short messages
+            long_threshold: Token count threshold for long messages
             short_model: Model or rule to use for short messages (< short_threshold)
             medium_model: Model or rule to use for medium messages (short_threshold <= length < long_threshold)
             long_model: Model or rule to use for long messages (>= long_threshold)
+            encoding_name: The tiktoken encoding to use (default: "cl100k_base" for GPT-4/3.5-turbo)
         """
         super().__init__(name)
         
@@ -36,29 +39,36 @@ class MessageLengthRule(Rule):
         self.short_model = short_model
         self.medium_model = medium_model
         self.long_model = long_model
+        
+        # Initialize tokenizer
+        try:
+            self.encoding = tiktoken.get_encoding(encoding_name)
+        except KeyError:
+            raise ValueError(f"Unknown encoding: {encoding_name}")
+        self.encoding_name = encoding_name
     
     def evaluate(self, request_data: Dict[str, Any]) -> Decision:
-        """Evaluate based on the total length of user messages.
+        """Evaluate based on the total token length of user messages.
         
         Args:
             request_data: The complete request data
             
         Returns:
-            Decision based on message length
+            Decision based on message token length
         """
         # Extract text content from messages
         text_content = self._extract_text_content(request_data)
         
-        # Calculate total character count
-        total_length = len(text_content)
+        # Calculate total token count
+        total_tokens = self._count_tokens(text_content)
         
-        # Determine which model to use based on length
-        if total_length < self.short_threshold:
-            return Decision(self.short_model, trigger=f"short_message_{total_length}_chars")
-        elif total_length < self.long_threshold:
-            return Decision(self.medium_model, trigger=f"medium_message_{total_length}_chars")
+        # Determine which model to use based on token count
+        if total_tokens < self.short_threshold:
+            return Decision(self.short_model, trigger=f"short_message_{total_tokens}_tokens")
+        elif total_tokens < self.long_threshold:
+            return Decision(self.medium_model, trigger=f"medium_message_{total_tokens}_tokens")
         else:
-            return Decision(self.long_model, trigger=f"long_message_{total_length}_chars")
+            return Decision(self.long_model, trigger=f"long_message_{total_tokens}_tokens")
     
     def _extract_text_content(self, request_data: Dict[str, Any]) -> str:
         """Extract text content from request messages.
@@ -83,6 +93,19 @@ class MessageLengthRule(Rule):
         
         return '\n'.join(text_parts)
     
+    def _count_tokens(self, text: str) -> int:
+        """Count the number of tokens in the given text.
+        
+        Args:
+            text: The text to tokenize
+            
+        Returns:
+            Number of tokens in the text
+        """
+        if not text:
+            return 0
+        return len(self.encoding.encode(text))
+    
     def get_thresholds(self) -> Dict[str, int]:
         """Get the current thresholds.
         
@@ -96,11 +119,11 @@ class MessageLengthRule(Rule):
     
     def update_thresholds(self, short_threshold: Optional[int] = None, 
                          long_threshold: Optional[int] = None) -> None:
-        """Update the length thresholds.
+        """Update the token count thresholds.
         
         Args:
-            short_threshold: New short threshold (optional)
-            long_threshold: New long threshold (optional)
+            short_threshold: New short token threshold (optional)
+            long_threshold: New long token threshold (optional)
             
         Raises:
             ValueError: If the new thresholds are invalid

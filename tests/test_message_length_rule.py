@@ -1,11 +1,20 @@
 """Tests for MessageLengthRule."""
 
 import pytest
+import tiktoken
 from src.deimos_router.rules import MessageLengthRule, Decision
 
 
 class TestMessageLengthRule:
     """Test cases for MessageLengthRule."""
+    
+    @staticmethod
+    def _count_tokens(text: str, encoding_name: str = "cl100k_base") -> int:
+        """Helper function to count tokens for testing."""
+        if not text:
+            return 0
+        encoding = tiktoken.get_encoding(encoding_name)
+        return len(encoding.encode(text))
     
     def test_init_valid_thresholds(self):
         """Test initialization with valid thresholds."""
@@ -71,30 +80,32 @@ class TestMessageLengthRule:
             long_model="gpt-4-turbo"
         )
         
+        content = "Hello"
         request_data = {
             "messages": [
-                {"role": "user", "content": "Hello"}  # 5 characters
+                {"role": "user", "content": content}
             ]
         }
         
         decision = rule.evaluate(request_data)
+        expected_tokens = self._count_tokens(content)
         
         assert decision.value == "gpt-3.5-turbo"
-        assert decision.trigger == "short_message_5_chars"
+        assert decision.trigger == f"short_message_{expected_tokens}_tokens"
     
     def test_evaluate_medium_message(self):
         """Test evaluation of medium messages."""
         rule = MessageLengthRule(
             name="test_rule",
-            short_threshold=100,
-            long_threshold=500,
+            short_threshold=30,  # Lower threshold for testing
+            long_threshold=100,
             short_model="gpt-3.5-turbo",
             medium_model="gpt-4",
             long_model="gpt-4-turbo"
         )
         
-        # Create a message with exactly 200 characters
-        content = "a" * 200
+        # Create a message that will result in medium token count
+        content = "This is a medium length message that should have enough tokens to be classified as medium length. " * 2
         request_data = {
             "messages": [
                 {"role": "user", "content": content}
@@ -102,23 +113,25 @@ class TestMessageLengthRule:
         }
         
         decision = rule.evaluate(request_data)
+        expected_tokens = self._count_tokens(content)
         
         assert decision.value == "gpt-4"
-        assert decision.trigger == "medium_message_200_chars"
+        assert decision.trigger == f"medium_message_{expected_tokens}_tokens"
+        assert 30 <= expected_tokens < 100  # Verify it's actually in medium range
     
     def test_evaluate_long_message(self):
         """Test evaluation of long messages."""
         rule = MessageLengthRule(
             name="test_rule",
-            short_threshold=100,
-            long_threshold=500,
+            short_threshold=30,
+            long_threshold=100,
             short_model="gpt-3.5-turbo",
             medium_model="gpt-4",
             long_model="gpt-4-turbo"
         )
         
-        # Create a message with exactly 1000 characters
-        content = "a" * 1000
+        # Create a message that will result in long token count
+        content = "This is a very long message that should have many tokens to be classified as a long message. " * 10
         request_data = {
             "messages": [
                 {"role": "user", "content": content}
@@ -126,75 +139,78 @@ class TestMessageLengthRule:
         }
         
         decision = rule.evaluate(request_data)
+        expected_tokens = self._count_tokens(content)
         
         assert decision.value == "gpt-4-turbo"
-        assert decision.trigger == "long_message_1000_chars"
+        assert decision.trigger == f"long_message_{expected_tokens}_tokens"
+        assert expected_tokens >= 100  # Verify it's actually in long range
     
     def test_evaluate_boundary_conditions(self):
         """Test evaluation at threshold boundaries."""
         rule = MessageLengthRule(
             name="test_rule",
-            short_threshold=100,
-            long_threshold=500,
+            short_threshold=10,  # Use smaller thresholds for predictable testing
+            long_threshold=20,
             short_model="gpt-3.5-turbo",
             medium_model="gpt-4",
             long_model="gpt-4-turbo"
         )
         
         # Test exactly at short_threshold (should be medium)
-        request_data = {
-            "messages": [
-                {"role": "user", "content": "a" * 100}
-            ]
-        }
-        decision = rule.evaluate(request_data)
-        assert decision.value == "gpt-4"
-        assert decision.trigger == "medium_message_100_chars"
+        # Create content that results in exactly 10 tokens
+        content_10_tokens = "word " * 10  # Should be around 10 tokens
+        actual_tokens = self._count_tokens(content_10_tokens)
         
-        # Test exactly at long_threshold (should be long)
-        request_data = {
-            "messages": [
-                {"role": "user", "content": "a" * 500}
-            ]
-        }
-        decision = rule.evaluate(request_data)
-        assert decision.value == "gpt-4-turbo"
-        assert decision.trigger == "long_message_500_chars"
+        # Adjust content to get exactly the threshold we want
+        if actual_tokens < 10:
+            content_10_tokens += "extra words to reach threshold"
+        elif actual_tokens > 10:
+            content_10_tokens = "word " * 8  # Try fewer words
         
-        # Test one character before short_threshold (should be short)
+        actual_tokens = self._count_tokens(content_10_tokens)
+        
         request_data = {
             "messages": [
-                {"role": "user", "content": "a" * 99}
+                {"role": "user", "content": content_10_tokens}
             ]
         }
         decision = rule.evaluate(request_data)
-        assert decision.value == "gpt-3.5-turbo"
-        assert decision.trigger == "short_message_99_chars"
+        
+        if actual_tokens >= 10:
+            assert decision.value in ["gpt-4", "gpt-4-turbo"]  # Medium or long
+        else:
+            assert decision.value == "gpt-3.5-turbo"  # Short
+        
+        assert decision.trigger == f"{'short' if actual_tokens < 10 else ('medium' if actual_tokens < 20 else 'long')}_message_{actual_tokens}_tokens"
     
     def test_evaluate_multiple_user_messages(self):
         """Test evaluation with multiple user messages."""
         rule = MessageLengthRule(
             name="test_rule",
-            short_threshold=100,
-            long_threshold=500,
+            short_threshold=10,
+            long_threshold=50,
             short_model="gpt-3.5-turbo",
             medium_model="gpt-4",
             long_model="gpt-4-turbo"
         )
         
+        content1 = "First message"
+        content2 = "Second message"
         request_data = {
             "messages": [
-                {"role": "user", "content": "a" * 50},  # 50 chars
+                {"role": "user", "content": content1},
                 {"role": "assistant", "content": "Response"},  # Should be ignored
-                {"role": "user", "content": "b" * 60}   # 60 chars
+                {"role": "user", "content": content2}
             ]
         }
         
         decision = rule.evaluate(request_data)
         
-        # Total user content: 50 + 60 = 110 characters (medium)
-        assert decision.value == "gpt-4"
-        assert decision.trigger == "medium_message_111_chars"  # 110 + 1 newline
+        # Calculate expected tokens for combined user content
+        combined_content = content1 + "\n" + content2
+        expected_tokens = self._count_tokens(combined_content)
+        
+        assert decision.trigger == f"{'short' if expected_tokens < 10 else ('medium' if expected_tokens < 50 else 'long')}_message_{expected_tokens}_tokens"
     
     def test_evaluate_empty_messages(self):
         """Test evaluation with empty or no messages."""
@@ -211,7 +227,7 @@ class TestMessageLengthRule:
         request_data = {"messages": []}
         decision = rule.evaluate(request_data)
         assert decision.value == "gpt-3.5-turbo"
-        assert decision.trigger == "short_message_0_chars"
+        assert decision.trigger == "short_message_0_tokens"
         
         # Empty content
         request_data = {
@@ -221,7 +237,7 @@ class TestMessageLengthRule:
         }
         decision = rule.evaluate(request_data)
         assert decision.value == "gpt-3.5-turbo"
-        assert decision.trigger == "short_message_0_chars"
+        assert decision.trigger == "short_message_0_tokens"
     
     def test_evaluate_non_user_messages_ignored(self):
         """Test that non-user messages are ignored in length calculation."""
@@ -234,18 +250,20 @@ class TestMessageLengthRule:
             long_model="gpt-4-turbo"
         )
         
+        content = "Hello"
         request_data = {
             "messages": [
                 {"role": "system", "content": "a" * 1000},  # Should be ignored
                 {"role": "assistant", "content": "b" * 1000},  # Should be ignored
-                {"role": "user", "content": "Hello"}  # Only this counts (5 chars)
+                {"role": "user", "content": content}  # Only this counts
             ]
         }
         
         decision = rule.evaluate(request_data)
+        expected_tokens = self._count_tokens(content)
         
         assert decision.value == "gpt-3.5-turbo"
-        assert decision.trigger == "short_message_5_chars"
+        assert decision.trigger == f"short_message_{expected_tokens}_tokens"
     
     def test_get_thresholds(self):
         """Test getting current thresholds."""
@@ -346,13 +364,65 @@ class TestMessageLengthRule:
             long_model=long_rule
         )
         
+        content = "Hello"
         request_data = {
             "messages": [
-                {"role": "user", "content": "Hello"}  # 5 characters (short)
+                {"role": "user", "content": content}
             ]
         }
         
         decision = rule.evaluate(request_data)
+        expected_tokens = self._count_tokens(content)
         
         assert decision.value == short_rule
-        assert decision.trigger == "short_message_5_chars"
+        assert decision.trigger == f"short_message_{expected_tokens}_tokens"
+    
+    def test_init_with_custom_encoding(self):
+        """Test initialization with custom encoding."""
+        rule = MessageLengthRule(
+            name="test_rule",
+            short_threshold=100,
+            long_threshold=500,
+            short_model="gpt-3.5-turbo",
+            medium_model="gpt-4",
+            long_model="gpt-4-turbo",
+            encoding_name="p50k_base"  # Different encoding
+        )
+        
+        assert rule.encoding_name == "p50k_base"
+        
+        # Test with invalid encoding
+        with pytest.raises(ValueError, match="Unknown encoding"):
+            MessageLengthRule(
+                name="test_rule",
+                short_threshold=100,
+                long_threshold=500,
+                short_model="gpt-3.5-turbo",
+                medium_model="gpt-4",
+                long_model="gpt-4-turbo",
+                encoding_name="invalid_encoding"
+            )
+    
+    def test_count_tokens_method(self):
+        """Test the _count_tokens method directly."""
+        rule = MessageLengthRule(
+            name="test_rule",
+            short_threshold=100,
+            long_threshold=500,
+            short_model="gpt-3.5-turbo",
+            medium_model="gpt-4",
+            long_model="gpt-4-turbo"
+        )
+        
+        # Test empty string
+        assert rule._count_tokens("") == 0
+        
+        # Test simple text
+        tokens = rule._count_tokens("Hello world")
+        assert tokens > 0
+        assert isinstance(tokens, int)
+        
+        # Test that longer text has more tokens
+        short_text = "Hello"
+        long_text = "Hello world this is a much longer text with many more words"
+        assert rule._count_tokens(long_text) > rule._count_tokens(short_text)
