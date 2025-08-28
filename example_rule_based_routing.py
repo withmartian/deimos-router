@@ -31,7 +31,6 @@ def main():
         rules=["task-decider"],  # Reference to registered rule
         default="gpt-4o-mini"    # Fallback if no rules match
     )
-    register_router(router)
     print(f"   Created router: {router}")
     print()
     
@@ -84,7 +83,6 @@ def main():
         rules=["main-decider"],
         default="gpt-4o-mini"
     )
-    register_router(advanced_router)
     
     print(f"   Created nested rules: main-decider → advice-decider")
     print(f"   Advanced router: {advanced_router}")
@@ -120,7 +118,6 @@ def main():
         rules=["urgent-decider", "general-decider"],  # Order matters!
         default="gpt-4o-mini"
     )
-    register_router(priority_router)
     
     print(f"   Priority router checks: urgent-decider → general-decider → default")
     

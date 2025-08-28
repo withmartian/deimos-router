@@ -152,8 +152,7 @@ router = Router(
     ]
 )
 
-# Register the router
-register_router(router)
+# Router is automatically registered when created
 
 # Use with ChatCompletions API
 chat = ChatCompletions()

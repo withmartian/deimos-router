@@ -347,8 +347,7 @@ def demonstrate_with_router():
         rules=[language_rule]
     )
     
-    # Register the router
-    register_router(router)
+    # Router is automatically registered when created
     
     test_requests = [
         {

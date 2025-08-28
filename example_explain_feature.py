@@ -31,7 +31,6 @@ def setup_example_router():
         rules=[task_rule, code_rule],  # Try task rule first, then code rule
         default="gpt-3.5-turbo"
     )
-    register_router(router)
     
     return router
 

@@ -45,6 +45,9 @@ class Router:
         else:
             # For rule-based routers, models is not used
             self.models = models or []
+        
+        # Automatically register the router
+        register_router(self)
     
     def select_model(self, request_data: Optional[Dict[str, Any]] = None) -> str:
         """Select a model based on rules or fallback to random/default selection.

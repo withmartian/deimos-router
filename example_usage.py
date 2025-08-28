@@ -9,7 +9,6 @@ def main():
     # Checkpoint 1: User can create a Router
     print("1. Creating a router named 'my-router'...")
     my_router = Router("my-router")
-    register_router(my_router)
     print(f"   Created router: {my_router}")
     print(f"   Available models: {my_router.models}")
     print()

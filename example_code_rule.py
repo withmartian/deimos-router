@@ -163,8 +163,7 @@ def demonstrate_with_chat_completions():
         ]
     )
     
-    # Register the router so ChatCompletions can find it
-    register_router(router)
+    # Router is automatically registered when created
     
     # Create ChatCompletions instance
     chat = ChatCompletions()

@@ -111,7 +111,6 @@ class TestRouterRegistry:
     def test_register_and_get_router(self):
         """Test registering and retrieving a router."""
         router = Router("test-router")
-        register_router(router)
         
         retrieved = get_router("test-router")
         assert retrieved is router
@@ -132,8 +131,6 @@ class TestRouterRegistry:
         router1 = Router("router-1")
         router2 = Router("router-2")
         
-        register_router(router1)
-        register_router(router2)
         
         routers = list_routers()
         assert set(routers) == {"router-1", "router-2"}

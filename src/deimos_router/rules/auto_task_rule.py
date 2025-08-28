@@ -44,7 +44,7 @@ class AutoTaskRule(Rule):
         detected_task = self._detect_task_llm(text_content)
         
         if detected_task and detected_task in self.triggers:
-            return Decision(self.triggers[detected_task])
+            return Decision(self.triggers[detected_task], trigger=detected_task)
         
         # Fall back to default
         return Decision(self.default)
@@ -100,17 +100,26 @@ User message:
 {text[:2000]}"""  # Limit text to avoid token limits
 
             # Make the API call
-            response = client.chat.completions.create(
-                model=self.llm_model,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=20,
-                temperature=0.1
-            )
+            # Note: Some models (like gpt-5-nano) don't support custom temperature or max_tokens
+            api_params = {
+                "model": self.llm_model,
+                "messages": [{"role": "user", "content": prompt}]
+            }
+            
+            # Only add temperature and max_tokens for models that support them
+            if not self.llm_model.endswith('-nano'):
+                api_params["temperature"] = 0.1
+                api_params["max_tokens"] = 50
+            
+            response = client.chat.completions.create(**api_params)
             
             # Extract the response
-            detected = response.choices[0].message.content.strip().lower()
+            raw_response = response.choices[0].message.content
+            if raw_response is None:
+                return None
+                
+            raw_response = raw_response.strip()
+            detected = raw_response.lower()
             
             # Validate the response
             if detected == "none":

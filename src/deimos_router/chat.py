@@ -31,7 +31,7 @@ class ChatCompletions:
         self,
         messages: List[Dict[str, str]],
         model: str,
-        explain: bool = False,
+        explain: bool = True,
         **kwargs: Any
     ) -> ChatCompletion:
         """Create a chat completion.

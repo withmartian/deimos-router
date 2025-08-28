@@ -30,7 +30,6 @@ def setup_example_router():
     )
     
     # Register the router
-    register_router(router)
     return router
 
 

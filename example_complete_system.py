@@ -27,7 +27,6 @@ def main():
         rules=["task-decider"],  # List of rules to evaluate
         default="openai/gpt-5"   # Default model if no rules match
     )
-    register_router(router)
     
     print(f"   Created TaskRule: {task_rule}")
     print(f"   Created Router: {router}")
@@ -81,7 +80,6 @@ def main():
         rules=["updated-task-decider"],
         default="openai/gpt-5"
     )
-    register_router(advanced_router)
     
     print(f"   Created nested advice rule: {advice_rule}")
     print(f"   Updated main rule to reference advice rule")
