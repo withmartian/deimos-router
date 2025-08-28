@@ -257,16 +257,17 @@ print(f"Selected: {selected_model}")  # Output: claude-3-5-sonnet
 
 ### Examples
 
-See the `example_*.py` files in the project root for comprehensive examples:
+See the `example_*.py` files in the `examples/` directory for comprehensive examples:
 
-- `example_code_rule.py` - CodeRule functionality and integration
-- `example_rule_based_routing.py` - Rule-based routing examples  
-- `example_complete_system.py` - Complete system integration
-- `example_usage.py` - Basic usage patterns
-- `example_logging.py` - Logging system demonstration
+- `examples/example_code_rule.py` - CodeRule functionality and integration
+- `examples/example_rule_based_routing.py` - Rule-based routing examples  
+- `examples/example_complete_system.py` - Complete system integration
+- `examples/example_usage.py` - Basic usage patterns
+- `examples/example_logging.py` - Logging system demonstration
 
 Run any example:
 ```bash
+cd examples
 python example_code_rule.py
 ```
 
