@@ -212,13 +212,13 @@ class CodeLanguageRule(Rule):
         text_content = self._extract_text_content(request_data)
         
         if not text_content:
-            return Decision(self.default)
+            return Decision(self.default, trigger="no_content")
         
         # Try regex-based detection first
         detected_language = self._detect_language_regex(text_content)
         
         if detected_language and detected_language in self.language_mappings:
-            return Decision(self.language_mappings[detected_language])
+            return Decision(self.language_mappings[detected_language], trigger=detected_language)
         
         # If no regex match and LLM fallback is enabled, try LLM detection
         if self.enable_llm_fallback and self.language_mappings:
@@ -229,10 +229,10 @@ class CodeLanguageRule(Rule):
             if unmapped_languages:
                 llm_detected = self._detect_language_llm(text_content, unmapped_languages)
                 if llm_detected and llm_detected in self.language_mappings:
-                    return Decision(self.language_mappings[llm_detected])
+                    return Decision(self.language_mappings[llm_detected], trigger=f"{llm_detected}_llm")
         
         # Fall back to default
-        return Decision(self.default)
+        return Decision(self.default, trigger="no_language_detected")
     
     def _extract_text_content(self, request_data: Dict[str, Any]) -> str:
         """Extract text content from request messages."""

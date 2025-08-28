@@ -38,16 +38,16 @@ class NaturalLanguageRule(Rule):
         text_content = self._extract_text_content(request_data)
         
         if not text_content:
-            return Decision(self.default)
+            return Decision(self.default, trigger="no_content")
         
         # Use LLM to detect the language
         detected_language = self._detect_language_llm(text_content)
         
         if detected_language and detected_language in self.language_mappings:
-            return Decision(self.language_mappings[detected_language])
+            return Decision(self.language_mappings[detected_language], trigger=detected_language)
         
         # Fall back to default
-        return Decision(self.default)
+        return Decision(self.default, trigger="no_language_detected")
     
     def _extract_text_content(self, request_data: Dict[str, Any]) -> str:
         """Extract text content from request messages."""
