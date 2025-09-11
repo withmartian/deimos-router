@@ -109,8 +109,7 @@ class ChatCompletions:
                 response._deimos_metadata.update({
                     'router_used': router_name,
                     'selected_model': selected_model,
-                    'original_model_field': original_model,
-                    'available_models': router.models.copy()
+                    'original_model_field': original_model
                 })
                 
                 # Add explanation if requested

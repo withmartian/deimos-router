@@ -104,4 +104,4 @@ class Rule(ABC):
         return self.__class__.__name__
     
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(name='{self.name}')"
+        return f"{self.__class__.__name__}('{self.name}')"

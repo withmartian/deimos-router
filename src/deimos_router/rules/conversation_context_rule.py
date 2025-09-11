@@ -160,6 +160,9 @@ class ConversationContextRule(Rule):
             return "deep"
     
     def __repr__(self) -> str:
-        return (f"ConversationContextRule(name='{self.name}', "
-                f"new_threshold={self.new_threshold}, "
-                f"deep_threshold={self.deep_threshold})")
+        return (f"ConversationContextRule('{self.name}', "
+                f"{self.new_threshold}, "
+                f"{self.deep_threshold}, "
+                f"'{self.new_model}', "
+                f"'{self.developing_model}', "
+                f"'{self.deep_model}')")

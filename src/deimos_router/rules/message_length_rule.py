@@ -141,6 +141,10 @@ class MessageLengthRule(Rule):
         self.long_threshold = new_long
     
     def __repr__(self) -> str:
-        return (f"MessageLengthRule(name='{self.name}', "
-                f"short_threshold={self.short_threshold}, "
-                f"long_threshold={self.long_threshold})")
+        return (f"MessageLengthRule('{self.name}', "
+                f"{self.short_threshold}, "
+                f"{self.long_threshold}, "
+                f"'{self.short_model}', "
+                f"'{self.medium_model}', "
+                f"'{self.long_model}', "
+                f"encoding_name={self.encoding_name!r})")

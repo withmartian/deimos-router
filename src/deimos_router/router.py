@@ -19,7 +19,6 @@ class Router:
         name: str, 
         rules: Optional[List[Union[str, Rule]]] = None,
         default: Optional[str] = None,
-        models: Optional[List[str]] = None  # Keep for backward compatibility
     ):
         """Initialize router with a name and routing rules.
         
@@ -33,24 +32,11 @@ class Router:
         self.rules = rules or []
         self.default = default or "gpt-3.5-turbo"
         
-        # Backward compatibility: if no rules provided but models are specified, use random selection
-        if not self.rules:
-            if models is None:
-                self.models = self.DEFAULT_CHEAP_MODELS.copy()
-            else:
-                self.models = models
-            
-            if not self.models:
-                raise ValueError("Router must have at least one model to select from")
-        else:
-            # For rule-based routers, models is not used
-            self.models = models or []
-        
         # Automatically register the router
         register_router(self)
     
     def select_model(self, request_data: Optional[Dict[str, Any]] = None) -> str:
-        """Select a model based on rules or fallback to random/default selection.
+        """Select a model based on rules or fallback to default selection.
         
         Args:
             request_data: The complete request data for rule evaluation
@@ -61,10 +47,6 @@ class Router:
         # If we have rules, use rule-based selection
         if self.rules:
             return self._select_model_by_rules(request_data or {})
-        
-        # Backward compatibility: random selection from models list
-        if self.models:
-            return random.choice(self.models)
         
         # Final fallback
         return self.default
@@ -86,12 +68,6 @@ class Router:
             if model:
                 return model, explanation
         
-        # Backward compatibility: random selection from models list
-        if self.models:
-            selected = random.choice(self.models)
-            explanation.append(ExplanationEntry("default", "default", "None", selected))
-            return selected, explanation
-        
         # Final fallback
         explanation.append(ExplanationEntry("default", "default", "None", self.default))
         return self.default, explanation
@@ -108,7 +84,11 @@ class Router:
         for rule_ref in self.rules:
             # Get the rule (either by name or direct reference)
             if isinstance(rule_ref, str):
-                rule = get_rule(rule_ref)
+                # Strip deimos/rules/ prefix if present
+                rule_name = rule_ref
+                if rule_name.startswith('deimos/rules/'):
+                    rule_name = rule_name[13:]  # Remove 'deimos/rules/' prefix
+                rule = get_rule(rule_name)
                 if rule is None:
                     continue  # Skip unknown rules
             else:
@@ -136,7 +116,11 @@ class Router:
         for rule_ref in self.rules:
             # Get the rule (either by name or direct reference)
             if isinstance(rule_ref, str):
-                rule = get_rule(rule_ref)
+                # Strip deimos/rules/ prefix if present
+                rule_name = rule_ref
+                if rule_name.startswith('deimos/rules/'):
+                    rule_name = rule_name[13:]  # Remove 'deimos/rules/' prefix
+                rule = get_rule(rule_name)
                 if rule is None:
                     continue  # Skip unknown rules
             else:
@@ -175,6 +159,9 @@ class Router:
             elif decision.is_rule():
                 # Get rule name and resolve it to a rule object
                 rule_name = decision.get_rule_name()
+                # Strip deimos/rules/ prefix if present
+                if rule_name and rule_name.startswith('deimos/rules/'):
+                    rule_name = rule_name[13:]  # Remove 'deimos/rules/' prefix
                 current_rule = get_rule(rule_name)
                 if current_rule is None:
                     # Rule not found, end chain
@@ -224,6 +211,9 @@ class Router:
                 ))
                 # Get rule name and resolve it to a rule object
                 rule_name = decision.get_rule_name()
+                # Strip deimos/rules/ prefix if present
+                if rule_name and rule_name.startswith('deimos/rules/'):
+                    rule_name = rule_name[13:]  # Remove 'deimos/rules/' prefix
                 current_rule = get_rule(rule_name)
                 if current_rule is None:
                     # Rule not found, end chain
@@ -250,34 +240,9 @@ class Router:
         
         return None, explanation
     
-    def add_model(self, model: str) -> None:
-        """Add a model to the router's selection pool.
-        
-        Args:
-            model: The model name to add
-        """
-        if model not in self.models:
-            self.models.append(model)
-    
-    def remove_model(self, model: str) -> None:
-        """Remove a model from the router's selection pool.
-        
-        Args:
-            model: The model name to remove
-            
-        Raises:
-            ValueError: If trying to remove the last model or if model not found
-        """
-        if len(self.models) <= 1:
-            raise ValueError("Cannot remove the last model from router")
-        
-        if model not in self.models:
-            raise ValueError(f"Model '{model}' not found in router")
-        
-        self.models.remove(model)
     
     def __repr__(self) -> str:
-        return f"Router(name='{self.name}', models={self.models})"
+        return f"Router('{self.name}', rules={self.rules!r}, default={self.default!r})"
 
 
 # Global registry for routers

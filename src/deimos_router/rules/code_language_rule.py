@@ -363,4 +363,4 @@ Code to analyze:
             return None
     
     def __repr__(self) -> str:
-        return f"CodeLanguageRule(name='{self.name}', languages={list(self.language_mappings.keys())})"
+        return f"CodeLanguageRule('{self.name}', {self.language_mappings}, default={self.default!r}, llm_model={self.llm_model!r}, enable_llm_fallback={self.enable_llm_fallback!r})"

@@ -205,4 +205,4 @@ class CodeRule(Rule):
         return code_ratio >= 0.5 and code_matches >= 2
     
     def __repr__(self) -> str:
-        return f"CodeRule(name='{self.name}', code={self.code}, not_code={self.not_code})"
+        return f"CodeRule('{self.name}', '{self.code}', '{self.not_code}')"

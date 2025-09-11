@@ -156,4 +156,4 @@ User message:
             del self.triggers[task]
     
     def __repr__(self) -> str:
-        return f"AutoTaskRule(name='{self.name}', tasks={list(self.triggers.keys())})"
+        return f"AutoTaskRule('{self.name}', {self.triggers}, default={self.default!r}, llm_model={self.llm_model!r})"

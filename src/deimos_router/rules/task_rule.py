@@ -59,4 +59,4 @@ class TaskRule(Rule):
             del self.triggers[task]
     
     def __repr__(self) -> str:
-        return f"TaskRule(name='{self.name}', triggers={list(self.triggers.keys())})"
+        return f"TaskRule('{self.name}', {self.triggers})"
