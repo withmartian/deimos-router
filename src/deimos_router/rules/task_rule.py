@@ -1,18 +1,18 @@
 """Task-based rule implementation."""
 
-from typing import Any, Dict, Union
+from typing import Any, Dict
 from .base import Rule, Decision
 
 
 class TaskRule(Rule):
     """Rule that makes decisions based on task metadata in the request."""
     
-    def __init__(self, name: str, triggers: Dict[str, Union[str, Rule]]):
+    def __init__(self, name: str, triggers: Dict[str, str]):
         """Initialize a TaskRule.
         
         Args:
             name: The name of this rule
-            triggers: Dictionary mapping task names to models or other rules
+            triggers: Dictionary mapping task names to model names or rule names (deimos/rules/rule-name)
         """
         super().__init__(name)
         self.triggers = triggers
@@ -40,12 +40,12 @@ class TaskRule(Rule):
         # No matching rule for this task
         return Decision(None, trigger=task)
     
-    def add_task_rule(self, task: str, decision: Union[str, Rule]) -> None:
+    def add_task_rule(self, task: str, decision: str) -> None:
         """Add a new task rule.
         
         Args:
             task: The task name
-            decision: The model name or Rule to use for this task
+            decision: The model name or rule name (deimos/rules/rule-name) to use for this task
         """
         self.triggers[task] = decision
     

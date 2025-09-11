@@ -1,6 +1,6 @@
 """Natural language detection rule implementation."""
 
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 import openai
 from ..config import config
 from .base import Rule, Decision
@@ -9,15 +9,15 @@ from .base import Rule, Decision
 class NaturalLanguageRule(Rule):
     """Rule that makes decisions based on the natural language detected in the message."""
     
-    def __init__(self, name: str, language_mappings: Dict[str, Union[str, Rule]], 
-                 default: Optional[Union[str, Rule]] = None,
+    def __init__(self, name: str, language_mappings: Dict[str, str], 
+                 default: Optional[str] = None,
                  llm_model: Optional[str] = None):
         """Initialize a NaturalLanguageRule.
         
         Args:
             name: The name of this rule
-            language_mappings: Dictionary mapping 2-letter ISO language codes to models or rules
-            default: Default model/rule when no language is detected or mapped
+            language_mappings: Dictionary mapping 2-letter ISO language codes to model names or rule names (deimos/rules/rule-name)
+            default: Default model name or rule name (deimos/rules/rule-name) when no language is detected or mapped
             llm_model: Model to use for language detection. If None, uses the default model from config.
         """
         super().__init__(name)

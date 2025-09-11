@@ -1,6 +1,6 @@
 """Automatic task detection rule implementation."""
 
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 import openai
 from ..config import config
 from .base import Rule, Decision
@@ -9,15 +9,15 @@ from .base import Rule, Decision
 class AutoTaskRule(Rule):
     """Rule that automatically detects tasks from message content using an LLM."""
     
-    def __init__(self, name: str, triggers: Dict[str, Union[str, Rule]], 
-                 default: Optional[Union[str, Rule]] = None,
+    def __init__(self, name: str, triggers: Dict[str, str], 
+                 default: Optional[str] = None,
                  llm_model: Optional[str] = None):
         """Initialize an AutoTaskRule.
         
         Args:
             name: The name of this rule
-            triggers: Dictionary mapping task names to models or rules
-            default: Default model/rule when no task is detected or mapped
+            triggers: Dictionary mapping task names to model names or rule names (deimos/rules/rule-name)
+            default: Default model name or rule name (deimos/rules/rule-name) when no task is detected or mapped
             llm_model: Model to use for task detection. If None, uses the default model from config.
         """
         super().__init__(name)
@@ -137,12 +137,12 @@ User message:
             # If LLM detection fails, return None
             return None
     
-    def add_task_mapping(self, task: str, decision: Union[str, Rule]) -> None:
+    def add_task_mapping(self, task: str, decision: str) -> None:
         """Add a new task mapping.
         
         Args:
             task: The task name
-            decision: The model name or Rule to use for this task
+            decision: The model name or rule name (deimos/rules/rule-name) to use for this task
         """
         self.triggers[task] = decision
     

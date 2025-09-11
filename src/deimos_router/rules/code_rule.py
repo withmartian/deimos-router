@@ -1,20 +1,20 @@
 """Code detection rule implementation."""
 
 import re
-from typing import Any, Dict, Union
+from typing import Any, Dict
 from .base import Rule, Decision
 
 
 class CodeRule(Rule):
     """Rule that makes decisions based on whether the request contains code."""
     
-    def __init__(self, name: str, code: Union[str, Rule], not_code: Union[str, Rule]):
+    def __init__(self, name: str, code: str, not_code: str):
         """Initialize a CodeRule.
         
         Args:
             name: The name of this rule
-            code: Model or rule to use when code is detected
-            not_code: Model or rule to use when no code is detected
+            code: Model name or rule name (deimos/rules/rule-name) to use when code is detected
+            not_code: Model name or rule name (deimos/rules/rule-name) to use when no code is detected
         """
         super().__init__(name)
         self.code = code

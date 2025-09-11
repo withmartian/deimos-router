@@ -1,6 +1,6 @@
 """Message length-based rule implementation."""
 
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 import tiktoken
 from .base import Rule, Decision
 
@@ -11,9 +11,9 @@ class MessageLengthRule(Rule):
     def __init__(self, name: str, 
                  short_threshold: int,
                  long_threshold: int,
-                 short_model: Union[str, Rule],
-                 medium_model: Union[str, Rule],
-                 long_model: Union[str, Rule],
+                 short_model: str,
+                 medium_model: str,
+                 long_model: str,
                  encoding_name: str = "cl100k_base"):
         """Initialize a MessageLengthRule.
         
@@ -21,9 +21,9 @@ class MessageLengthRule(Rule):
             name: The name of this rule
             short_threshold: Token count threshold for short messages
             long_threshold: Token count threshold for long messages
-            short_model: Model or rule to use for short messages (< short_threshold)
-            medium_model: Model or rule to use for medium messages (short_threshold <= length < long_threshold)
-            long_model: Model or rule to use for long messages (>= long_threshold)
+            short_model: Model name or rule name (deimos/rules/rule-name) to use for short messages (< short_threshold)
+            medium_model: Model name or rule name (deimos/rules/rule-name) to use for medium messages (short_threshold <= length < long_threshold)
+            long_model: Model name or rule name (deimos/rules/rule-name) to use for long messages (>= long_threshold)
             encoding_name: The tiktoken encoding to use (default: "cl100k_base" for GPT-4/3.5-turbo)
         """
         super().__init__(name)

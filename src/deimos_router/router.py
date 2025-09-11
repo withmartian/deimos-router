@@ -173,7 +173,12 @@ class Router:
             if decision.is_model():
                 return decision.get_model()
             elif decision.is_rule():
-                current_rule = decision.get_rule()
+                # Get rule name and resolve it to a rule object
+                rule_name = decision.get_rule_name()
+                current_rule = get_rule(rule_name)
+                if current_rule is None:
+                    # Rule not found, end chain
+                    return None
                 depth += 1
             else:
                 # Decision is None, rule chain ends without a model
@@ -217,7 +222,12 @@ class Router:
                     rule_trigger=decision.trigger,
                     decision="continue"
                 ))
-                current_rule = decision.get_rule()
+                # Get rule name and resolve it to a rule object
+                rule_name = decision.get_rule_name()
+                current_rule = get_rule(rule_name)
+                if current_rule is None:
+                    # Rule not found, end chain
+                    return None, explanation
                 depth += 1
             else:
                 # Decision is None, rule chain ends without a model

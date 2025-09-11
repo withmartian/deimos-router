@@ -1,6 +1,6 @@
 """Conversation context-based rule implementation."""
 
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 from .base import Rule, Decision
 
 
@@ -10,18 +10,18 @@ class ConversationContextRule(Rule):
     def __init__(self, name: str,
                  new_threshold: int,
                  deep_threshold: int,
-                 new_model: Union[str, Rule],
-                 developing_model: Union[str, Rule],
-                 deep_model: Union[str, Rule]):
+                 new_model: str,
+                 developing_model: str,
+                 deep_model: str):
         """Initialize a ConversationContextRule.
         
         Args:
             name: The name of this rule
             new_threshold: Message count threshold for new conversations
             deep_threshold: Message count threshold for deep conversations
-            new_model: Model or rule to use for new conversations (< new_threshold messages)
-            developing_model: Model or rule to use for developing conversations (new_threshold <= messages < deep_threshold)
-            deep_model: Model or rule to use for deep conversations (>= deep_threshold messages)
+            new_model: Model name or rule name (deimos/rules/rule-name) to use for new conversations (< new_threshold messages)
+            developing_model: Model name or rule name (deimos/rules/rule-name) to use for developing conversations (new_threshold <= messages < deep_threshold)
+            deep_model: Model name or rule name (deimos/rules/rule-name) to use for deep conversations (>= deep_threshold messages)
         """
         super().__init__(name)
         

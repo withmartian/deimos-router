@@ -7,11 +7,11 @@ from typing import Any, Dict, List, Optional, Union
 class Decision:
     """Represents a decision made by a rule."""
     
-    def __init__(self, value: Union[str, 'Rule', None], trigger: Optional[str] = None):
+    def __init__(self, value: Union[str, None], trigger: Optional[str] = None):
         """Initialize a decision.
         
         Args:
-            value: Either a model name (str), another Rule, or None for no decision
+            value: Either a model name, rule name (deimos/rules/rule-name), or None for no decision
             trigger: The trigger that caused this decision (e.g., task name, code language)
         """
         self.value = value
@@ -19,11 +19,11 @@ class Decision:
     
     def is_model(self) -> bool:
         """Check if this decision is a model selection."""
-        return isinstance(self.value, str)
+        return isinstance(self.value, str) and not self.value.startswith('deimos/rules/')
     
     def is_rule(self) -> bool:
         """Check if this decision points to another rule."""
-        return isinstance(self.value, Rule)
+        return isinstance(self.value, str) and self.value.startswith('deimos/rules/')
     
     def is_none(self) -> bool:
         """Check if this decision is None (no decision made)."""
@@ -33,15 +33,15 @@ class Decision:
         """Get the model name if this is a model decision."""
         return self.value if self.is_model() else None
     
-    def get_rule(self) -> Optional['Rule']:
-        """Get the rule if this decision points to another rule."""
+    def get_rule_name(self) -> Optional[str]:
+        """Get the rule name if this decision points to another rule."""
         return self.value if self.is_rule() else None
     
     def __repr__(self) -> str:
         if self.is_model():
             return f"Decision(model='{self.value}', trigger='{self.trigger}')"
         elif self.is_rule():
-            return f"Decision(rule={self.value.name}, trigger='{self.trigger}')"
+            return f"Decision(rule='{self.value}', trigger='{self.trigger}')"
         else:
             return f"Decision(None, trigger='{self.trigger}')"
 
@@ -77,12 +77,15 @@ class Rule(ABC):
     """Abstract base class for all rules."""
     
     def __init__(self, name: str):
-        """Initialize a rule with a name.
+        """Initialize a rule with a name and auto-register it.
         
         Args:
             name: The name of this rule
         """
         self.name = name
+        # Auto-register the rule
+        from . import register_rule
+        register_rule(self)
     
     @abstractmethod
     def evaluate(self, request_data: Dict[str, Any]) -> Decision:
