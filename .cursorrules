@@ -1,0 +1,30 @@
+/ Typing & Naming
+- Use complete type hints everywhere
+- Name types with PascalCase
+- Consider using Protocol classes for structural typing & duck-typing rather than relying on Any
+- When a function only returns one kind of value, avoid unions; if it can return None, write Type | None rather than Optional[Type]. If a function needs to accept different types of arguments / return different types based on them, consider using @overload.
+
+// Code Style & Structure
+- Follow Google’s style guide for imports, formatting, naming, etc. (i.e. import fastapi then use fastapi.status)
+- Favor a functional style when writing code
+- Keep code Pythonic: use list/dict comprehensions, built-ins (e.g. sum, any), unpacking, and avoid needless for-loops.
+- Limit line length (e.g. 100 characters) to keep diffs readable.
+
+// Documentation & Comments
+- Add docstrings when methods or classes need description/elaboration, but don't be overly verbose
+- Add comments for things like magic values, unintuitive behaviors, gotchas, external context, etc.
+- Log format strings correctly: for functions expecting a percent-format pattern, pass the literal pattern as the first argument and variables separately (no f-strings).
+- Follow Google style docstrings
+
+// Testing
+- Every module should have tests alongside it.
+- When possible, use hypothesis for property-based testing instead of writing out test cases. Also prefer unit tests to end-to-end tests
+
+// Conventions
+- Use underscores in long numbers, e.g. 1_000_000
+- Functions not used outside their module should be prefixed with `_`
+- Use context managers (`with` statements) for resource management
+- Use assert to help type checking when function logic limits return types
+- Use typing.cast as a no-op to inform the type checker of a type when needed
+- Enforce immutability: Prefer frozenset, tuple, or dataclasses with frozen=True for value objects.
+- Don't Repeat Yourself: extract repeated code into reusable functions; share common logic through proper abstraction; maintain single sources of truth
